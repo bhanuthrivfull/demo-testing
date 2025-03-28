@@ -1,14 +1,16 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { CurrencyContext } from "./CurrencyContext";
 
 const PriceConverter = () => {
+    const [products, setProducts] = useState([]);
     const { language, setLanguage, exchangeRate, selectedCurrency } = useContext(CurrencyContext);
-    const priceINR = 1400;
 
-    const formattedPrice = new Intl.NumberFormat(selectedCurrency.locale, {
-        style: "currency",
-        currency: selectedCurrency.code,
-    }).format(priceINR * exchangeRate);
+    useEffect(() => {
+        fetch("https://fakestoreapi.com/products")
+            .then(res => res.json())
+            .then(data => setProducts(data))
+            .catch(error => console.error("Error fetching products:", error));
+    }, []);
 
     return (
         <div>
@@ -25,7 +27,22 @@ const PriceConverter = () => {
                 </select>
             </label>
 
-            <span>{`Price: ${formattedPrice}`}</span>
+            <h3>Product Prices:</h3>
+            <ul>
+                {products.map(product => {
+                    const convertedPrice = (product.price * exchangeRate).toFixed(2);
+                    const formattedPrice = new Intl.NumberFormat(selectedCurrency.locale, {
+                        style: "currency",
+                        currency: selectedCurrency.code,
+                    }).format(convertedPrice);
+
+                    return (
+                        <li key={product.id}>
+                            {product.title}: {formattedPrice}
+                        </li>
+                    );
+                })}
+            </ul>
         </div>
     );
 };
